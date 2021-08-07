@@ -1,0 +1,40 @@
+name: "Support"
+
+on: [push, pull_request]
+
+jobs:
+  support:
+    runs-on: ubuntu-20.04
+    strategy:
+      #fail-fast: false
+      matrix:
+        cxx: [g++-10]
+        std: [14, 17]
+        cmake_version: [3.14.0]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install V8
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install libv8-dev -y
+
+    - name: Install specific CMake
+      env:
+        CMAKE_VERSION: ${{matrix.cmake_version}}
+        CMAKE_INSTALL_FILE: cmake-${{matrix.cmake_version}}-Linux-x86_64.sh
+      run: |
+        wget --no-clobber https://github.com/Kitware/CMake/releases/download/v${{env.CMAKE_VERSION}}/${{env.CMAKE_INSTALL_FILE}}
+        chmod 775 ./${{env.CMAKE_INSTALL_FILE}}
+        sudo ./${{env.CMAKE_INSTALL_FILE}} --skip-license --prefix=/usr/local
+        rm -f ./${{env.CMAKE_INSTALL_FILE}}
+
+    - name: Check library integrations
+      env:
+        CXX: ${{matrix.cxx}}
+        CXXFLAGS: -std=c++${{matrix.std}}
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: make integration_check

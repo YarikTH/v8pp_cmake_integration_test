@@ -1,0 +1,3 @@
+[submodule "v8pp"]
+	path = v8pp
+	url = git@github.com:YarikTH/v8pp.git
